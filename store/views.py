@@ -1,4 +1,5 @@
 import http
+from itertools import product
 import django
 from django.db.models.aggregates import Count
 from django.shortcuts import get_object_or_404
@@ -14,13 +15,13 @@ from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, RetrieveM
 from store.pagination import DefaultPagination
 from .permissions import IsAdminOrReadOnly, ViewCustomerHistoryPermission
 from .filters import ProductFilter
-from .models import Collection, Product, Review, Cart, CartItem, Customer, Order
-from .serializers import AddCartItemSerializer, CartItemSerializer, CartSerializer, CollectionSerializer, CreateOrderSerializer, OrderSerializer, ProductSerializer, ReviewSerailizer, UpdateCartItemSerializer, CustomerSerializer, UpdateOrderSerializer
+from .models import Collection, Product, ProductImage, Review, Cart, CartItem, Customer, Order
+from .serializers import AddCartItemSerializer, CartItemSerializer, CartSerializer, CollectionSerializer, CreateOrderSerializer, OrderSerializer, ProductImageSerializer, ProductImageSerializer, ProductSerializer, ReviewSerailizer, UpdateCartItemSerializer, CustomerSerializer, UpdateOrderSerializer
 from store import serializers
 
 
 class ProductViewSet(ModelViewSet):
-    queryset=Product.objects.all()
+    queryset=Product.objects.prefetch_related('images').all()
     serializer_class=ProductSerializer
     filter_backends=[DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class=ProductFilter
@@ -131,3 +132,13 @@ class OrderViewSet(ModelViewSet):
         customer_id=Customer.objects.only(
             'id').get(user_id=user.id)
         return Order.objects.filter(customer_id=customer_id)
+
+class ProductImageViewSet(ModelViewSet):
+    serializer_class=ProductImageSerializer
+
+    def get_serializer_context(self):
+        return { 'product_id':self.kwargs['product_pk'] }
+    
+    def get_queryset(self):
+        return ProductImage.objects.filter(product_id=self.kwargs['product_pk'])
+

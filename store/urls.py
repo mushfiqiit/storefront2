@@ -1,5 +1,6 @@
 from cgitb import lookup
 from email.mime import base
+from posixpath import basename
 from django.urls import path, include
 
 from store.models import Cart
@@ -14,7 +15,11 @@ router.register('customers', views.CustomerViewSet)
 router.register('orders', views.OrderViewSet, basename='orders')
 
 products_router=routers.NestedDefaultRouter(router, 'products', lookup='product')
-products_router.register('reviews', views.ReviewViewSet, basename='product-reviews')
+products_router.register('reviews', views.ReviewViewSet, 
+basename='product-reviews')
+
+products_router.register('images', views.ProductImageViewSet, basename='product-images')
+
 
 carts_router=routers.NestedDefaultRouter(router, 'carts', lookup='cart')
 carts_router.register('items', views.CartItemViewSet, basename='cart-items')

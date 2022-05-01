@@ -4,7 +4,7 @@ from django.db import transaction
 from itertools import product
 from xml.dom import ValidationErr
 from django.forms import ValidationError
-from store.models import Cart, CartItem, Customer, Order, OrderItem, Product, Collection, Review
+from store.models import Cart, CartItem, Customer, Order, OrderItem, Product, Collection, ProductImage, Review
 from rest_framework import serializers
 import store.signals
 
@@ -16,10 +16,23 @@ class CollectionSerializer(serializers.ModelSerializer):
     products_count = serializers.IntegerField()
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        product_id=self.context['product_id']
+        return ProductImage.objects.create(product_id=product_id, **validated_data)
+
+    class Meta:
+        model=ProductImage
+        fields=['id', 'image']
+
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    images=ProductImageSerializer(many=True, read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'title', 'description', 'slug', 'inventory', 'unit_price', 'price_with_tax', 'collection']
+        fields = ['id', 'title', 'description', 'slug', 'inventory',
+         'unit_price', 'price_with_tax', 'collection', 'images']
 
     price_with_tax = serializers.SerializerMethodField(
         method_name='calculate_tax')
@@ -166,3 +179,4 @@ class CreateOrderSerializer(serializers.Serializer):
                 self.__class__, order=order)
 
             return order
+
